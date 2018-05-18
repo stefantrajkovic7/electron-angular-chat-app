@@ -3,6 +3,7 @@ import { AngularFireAuth } from 'angularfire2/auth';
 import { AngularFirestore } from 'angularfire2/firestore';
 import { AngularFireStorage } from 'angularfire2/storage';
 import { BehaviorSubject, Subject } from 'rxjs';
+import { combineLatest } from 'rxjs';
 import * as firebase from 'firebase';
 
 @Injectable()
@@ -13,8 +14,7 @@ export class GroupsService {
   enteredGroup = new BehaviorSubject<boolean>(false);
   currentGroup;
   
-  constructor(private afauth: AngularFireAuth, private afs: AngularFirestore,
-              private storage: AngularFireStorage) { }
+  constructor(private afauth: AngularFireAuth, private afs: AngularFirestore) { }
 
 
   enterGroup(group) {
@@ -49,29 +49,29 @@ export class GroupsService {
               conversationId: docRef.id
             }).then(() => {
               resolve();
-            })
-          })
-        })
-      })
-    })
+            });
+          });
+        });
+      });
+    });
   }
 
-  getGroups() {
-    return new Promise((resolve) => {
-      const createdGroupObs = this.afs.collection('groups', ref => ref.where('creator', '==', this.afauth.auth.currentUser.email)).valueChanges();
-      const memberofCollRef = this.afs.collection('memberof').ref;
-      const queryRef = memberofCollRef.where('email', '==', this.afauth.auth.currentUser.email);
-      queryRef.get().then((snapShot) => {
-        if (!snapShot.empty) {
-          const memberofObs = this.afs.doc('memberof/' + snapShot.docs[0].id).collection('groups').valueChanges();
-          resolve(createdGroupObs.combineLatest(memberofObs, (x, y) => x.concat(y)));
-        } else {
-            resolve(createdGroupObs);
-        }
-      })
-    })
+  // getGroups() {
+  //   return new Promise((resolve) => {
+  //     const createdGroupObs = this.afs.collection('groups', ref => ref.where('creator', '==', this.afauth.auth.currentUser.email)).valueChanges();
+  //     const memberofCollRef = this.afs.collection('memberof').ref;
+  //     const queryRef = memberofCollRef.where('email', '==', this.afauth.auth.currentUser.email);
+  //     queryRef.get().then((snapShot) => {
+  //       if (!snapShot.empty) {
+  //         const memberofObs = this.afs.doc('memberof/' + snapShot.docs[0].id).collection('groups').valueChanges();
+  //         resolve(createdGroupObs.combineLatest(memberofObs, (x, y) => x.concat(y)));
+  //       } else {
+  //           resolve(createdGroupObs);
+  //       }
+  //     });
+  //   });
     
-  }
+  // }
 
   addMember(user) {
     return new Promise((resolve) => {
@@ -92,20 +92,20 @@ export class GroupsService {
                   .collection('groups')
                   .add(this.currentGroup).then(() => {
                     resolve();
-                  })
-                })
+                  });
+                });
               } else {
                     this.afs.doc('memberof/' + snapShot.docs[0].id).collection('groups').add(this.currentGroup).then(() => {
                     resolve();
-                    })  
+                    });  
               }
-            })
-          })
+            });
+          });
         }
-      })
+      });
 
 
-    })
+    });
   }
 
   getMembers() {
@@ -114,8 +114,8 @@ export class GroupsService {
       const queryRef = groupCollRef.where('groupName', '==', this.currentGroup.groupName).where('creator', '==', this.currentGroup.creator);
       queryRef.get().then((snapShot) => {
         resolve(this.afs.doc('groups/' + snapShot.docs[0].id).collection('members').valueChanges());
-      })
-    })
+      });
+    });
   }
 
   removeMember(user) {
@@ -135,37 +135,37 @@ export class GroupsService {
               query.get().then((snapShot) => {
                 snapShot.docs[0].ref.delete().then(() => {
                   resolve();
-                })
-              })
-            })
-          })
-        })
-      })
-    })
+                });
+              });
+            });
+          });
+        });
+      });
+    });
   }
 
-  changeGroupPic(pic) {
-    let downloadURL;
-    const uploadTask = this.storage.upload('/groupPics/' + this.currentGroup.groupName, pic);
-    uploadTask.then((data: any) => {
-      downloadURL = data.downloadURL;
-      if (data.metadata.contentType.match('image/.*')) {
-        const groupCollRef = this.afs.collection('groups').ref;
-        const queryRef = groupCollRef.where('groupName', '==', this.currentGroup.groupName).where('creator', '==', this.currentGroup.creator);
-        queryRef.get().then((snapShot) => {
-          snapShot.docs[0].ref.update({
-            groupPic: downloadURL
-          })
-        })  
-      } else {
-            data.ref.delete().then(() => {
-            console.log('Not an image');
-        })
-      }
-    }).catch((err) => {
-      console.log('Upload failed');
-      console.log(err);
-      })
-  }
+  // changeGroupPic(pic) {
+  //   let downloadURL;
+  //   const uploadTask = this.storage.upload('/groupPics/' + this.currentGroup.groupName, pic);
+  //   uploadTask.then((data: any) => {
+  //     downloadURL = data.downloadURL;
+  //     if (data.metadata.contentType.match('image/.*')) {
+  //       const groupCollRef = this.afs.collection('groups').ref;
+  //       const queryRef = groupCollRef.where('groupName', '==', this.currentGroup.groupName).where('creator', '==', this.currentGroup.creator);
+  //       queryRef.get().then((snapShot) => {
+  //         snapShot.docs[0].ref.update({
+  //           groupPic: downloadURL
+  //         })
+  //       })  
+  //     } else {
+  //           data.ref.delete().then(() => {
+  //           console.log('Not an image');
+  //       })
+  //     }
+  //   }).catch((err) => {
+  //     console.log('Upload failed');
+  //     console.log(err);
+  //     })
+  // }
 
 }

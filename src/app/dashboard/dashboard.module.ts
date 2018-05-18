@@ -16,7 +16,6 @@ import { dashboardComponents, dashboardServices, dashboardGuards } from './colle
     DashboardRoutingModule
   ],
   providers: [
-    ...dashboardServices,
     ...dashboardGuards
   ]
 })

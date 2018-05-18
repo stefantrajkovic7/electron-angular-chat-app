@@ -1,6 +1,6 @@
 import { AppPage } from './app.po';
 
-describe('electron-angular-chat-app App', () => {
+describe('workspace-project App', () => {
   let page: AppPage;
 
   beforeEach(() => {
